@@ -1,4 +1,5 @@
 const Book = require("../models/book");
+const fs = require("fs"); //Le package fs expose des méthodes pour interagir avec le système de fichiers du serveur.
 
 // Récupère tous les livres
 exports.getAllBooks = (req, res, next) => {
@@ -55,7 +56,7 @@ exports.modifyBook = (req, res, next) => {
       // Vérifie si l'utilisateur qui effectue la modification est l'auteur du livre
       if (thing.userId != req.auth.userId) {
         //sinon renvoie une réponse 401
-        res.status(401).json({ message: "Not authorized" });
+        res.status(401).json({ message: "Non autorisé" });
       } else {
         //Si oui, met à jour le livre dans la base de données en utilisant la méthode updateOne()
         // Fournit les nouvelles données du livre en utilisant l'objet bookObject et l'identifiant du livre
@@ -75,7 +76,26 @@ exports.modifyBook = (req, res, next) => {
 
 // Supprime un livre
 exports.deleteBook = (req, res, next) => {
-  Book.deleteOne({ _id: req.params.id })
-    .then(() => res.status(200).json({ message: "Livre supprimé !" })) // Répond avec un message de succès
-    .catch((error) => res.status(400).json({ error })); // Gère les erreurs
+  // Recherche du livre correspondant à l'ID fourni dans les paramètres de la requête
+  Book.findOne({ _id: req.params.id })
+    .then((book) => {
+      if (book.userId != req.auth.userId) {
+        // Vérification si l'utilisateur est autorisé à supprimer le livre
+        res.status(401).json({ message: "Not authorized" });
+      } else {
+        // Extraction du nom de fichier à partir de l'URL de l'image du livre
+        const filename = book.imageUrl.split("/images/")[1];
+        // Suppression du fichier d'image associé
+        fs.unlink(`images/${filename}`, () => {
+          // Suppression du livre dans la base de données
+          Book.deleteOne({ _id: req.params.id })
+            .then(() => res.status(200).json({ message: "Livre supprimé !" })) // Répond avec un message de succès
+            .catch((error) => res.status(400).json({ error })); // Gère les erreurs
+        });
+      }
+    })
+    .catch((error) => {
+      res.status(500).json({ error });
+      // Gère les erreurs lors de la recherche du livre dans la base de données
+    });
 };
