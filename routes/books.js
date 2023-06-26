@@ -4,7 +4,7 @@ const bookCtrl = require("../controllers/book");
 const router = express.Router();
 
 // Route pour récupérer tous les livres
-router.get("/", bookCtrl.getAllBooks);
+router.get("/", auth, bookCtrl.getAllBooks);
 
 // Route pour récupérer un livre par son ID
 router.get("/:id", auth, bookCtrl.getOneBook);
