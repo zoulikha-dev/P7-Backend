@@ -16,8 +16,18 @@ exports.getOneBook = (req, res, next) => {
 
 // Crée un nouveau livre
 exports.createBook = (req, res, next) => {
+  // Extraction des données du livre à partir du corps de la requête
+  const bookObject = JSON.parse(req.body.book);
+  // Suppression des propriétés inutiles du livre
+  delete bookObject._id;
+  delete bookObject._userId;
+  // Création d'une nouvelle instance de Book avec les données du livre
   const book = new Book({
-    ...req.body, // Copie les données du corps de la requête pour créer le livre
+    ...bookObject,
+    userId: req.auth.userId,
+    imageUrl: `${req.protocol}://${req.get("host")}/images/${
+      req.file.filename
+    }`,
   });
   book
     .save() // Enregistre le livre dans la base de données
@@ -27,9 +37,40 @@ exports.createBook = (req, res, next) => {
 
 // Met à jour un livre existant
 exports.modifyBook = (req, res, next) => {
-  Book.updateOne({ _id: req.params.id }, { ...req.body, _id: req.params.id })
-    .then(() => res.status(200).json({ message: "Livre modifié !" })) // Répond avec un message de succès
-    .catch((error) => res.status(400).json({ error })); // Gère les erreurs
+  //creation d'un objet bookObject qui regarde si req.file existe ou non ?
+  const bookObject = req.file
+    ? {
+        //Si req.file existe, un nouvel objet bookObject est créé en combinant les données du livre provenant du corps de la requête (JSON.parse(req.body.book)) avec l'URL de l'image générée dynamiquement, qui inclut le protocole, l'hôte et le nom de fichier de l'image téléchargée.
+        ...JSON.parse(req.body.book),
+        imageUrl: `${req.protocol}://${req.get("host")}/images/${
+          req.file.filename
+        }`,
+      }
+    : //s'il n'existe pas, on traite simplement l'objet entrant.
+      { ...req.body };
+  delete bookObject._userId; //suppression de la propriété pour des raisons de sécurité
+  // Recherche le livre dans la base de données en fonction de son identifiant
+  Book.findOne({ _id: req.params.id })
+    .then((thing) => {
+      // Vérifie si l'utilisateur qui effectue la modification est l'auteur du livre
+      if (thing.userId != req.auth.userId) {
+        //sinon renvoie une réponse 401
+        res.status(401).json({ message: "Not authorized" });
+      } else {
+        //Si oui, met à jour le livre dans la base de données en utilisant la méthode updateOne()
+        // Fournit les nouvelles données du livre en utilisant l'objet bookObject et l'identifiant du livre
+        Book.updateOne(
+          { _id: req.params.id },
+          { ...bookObject, _id: req.params.id }
+        )
+          .then(() => res.status(200).json({ message: "Livre modifié !" })) // Répond avec un message de succès
+          .catch((error) => res.status(400).json({ error })); // Gère les erreurs
+      }
+    })
+    .catch((error) => {
+      // Gère les erreurs lors de la recherche du livre dans la base de données
+      res.status(400).json({ error });
+    });
 };
 
 // Supprime un livre
