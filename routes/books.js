@@ -1,20 +1,21 @@
-const mongoose = require("mongoose");
+const express = require("express");
+const bookCtrl = require("../controllers/book");
 
-//Définition du schéma pour le modèle "Book"
-const bookSchema = mongoose.Schema({
-  userId: { type: String, required: true },
-  title: { type: String, required: true },
-  author: { type: String, required: true },
-  imageUrl: { type: String, required: true },
-  year: { type: Number, required: true },
-  genre: { type: String, required: true },
-  ratings: [
-    {
-      userId: { type: String, required: true },
-      grade: { type: Number, required: true },
-    },
-  ],
-  averageRating: { type: Number },
-});
+const router = express.Router();
 
-module.exports = mongoose.model("Book", bookSchema);
+// Route pour récupérer tous les livres
+router.get("/", bookCtrl.getAllBooks);
+
+// Route pour récupérer un livre par son ID
+router.get("/:id", auth, bookCtrl.getOneBook);
+
+// Route pour créer un nouveau livre
+router.post("/", auth, bookCtrl.createBook);
+
+// Route pour mettre à jour un livre existant
+router.put("/:id", auth, bookCtrl.modifyBook);
+
+// Route pour supprimer un livre
+router.delete("/:id", auth, bookCtrl.deleteBook);
+
+module.exports = router;
