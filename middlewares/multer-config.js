@@ -1,3 +1,4 @@
+//configuration Multer pour gérer le téléchargement d'un fichier unique.
 const multer = require("multer");
 
 // Définition des types MIME pour les extensions d'images acceptées
