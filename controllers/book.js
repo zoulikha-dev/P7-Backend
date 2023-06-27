@@ -1,4 +1,4 @@
-const Book = require("../models/book");
+const Book = require("../models/Book");
 const fs = require("fs"); //Le package fs expose des méthodes pour interagir avec le système de fichiers du serveur.
 
 // Récupère tous les livres
@@ -99,3 +99,9 @@ exports.deleteBook = (req, res, next) => {
       // Gère les erreurs lors de la recherche du livre dans la base de données
     });
 };
+
+// //ajout notation
+// exports.addRating = (req, res, next) => {
+//
+
+// }
