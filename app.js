@@ -4,6 +4,8 @@ const mongoose = require("mongoose");
 const bookRoutes = require("./routes/books");
 const userRoutes = require("./routes/users");
 
+const path = require("path");
+
 //Permet d'interagir avec MongoDB à l'aide de Mongoose
 mongoose
   .connect(
@@ -37,5 +39,6 @@ app.use((req, res, next) => {
 // déclarations de routes, utilisées pour définir les points d'entrée de l'API pour les fonctionnalités liées aux livres et à l'authentification.
 app.use("/api/books", bookRoutes);
 app.use("/api/auth", userRoutes);
+app.use("/images", express.static(path.join(__dirname, "images")));
 
 module.exports = app;
