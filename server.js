@@ -1,3 +1,6 @@
+// Charger les variables d'environnement à partir du fichier .env
+require("dotenv").config();
+
 const http = require("http");
 const app = require("./app");
 
