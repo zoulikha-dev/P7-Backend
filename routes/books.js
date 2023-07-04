@@ -24,7 +24,10 @@ router.put("/:id", auth, multerConfig, deleteOldImage, bookCtrl.modifyBook);
 // Route pour supprimer un livre
 router.delete("/:id", auth, bookCtrl.deleteBook);
 
-//Route pour ajouter une notation à un livre
+// Route pour ajouter une notation à un livre
 router.post("/:id/rating", auth, bookCtrl.addRating);
+
+// Route pour récupérer les 3 livres avec la meilleure note moyenne
+router.get("/bestrating", auth, bookCtrl.getBestRatedBooks);
 
 module.exports = router;
