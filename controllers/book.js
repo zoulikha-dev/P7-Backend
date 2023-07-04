@@ -100,8 +100,48 @@ exports.deleteBook = (req, res, next) => {
     });
 };
 
-// //ajout notation
-// exports.addRating = (req, res, next) => {
-//
+//ajout notation
+exports.addRating = async (req, res, next) => {
+  const { id } = req.params; // ID du livre extrait des paramètres de la requête
+  const { userId, grade } = req.body; // Données de la notation extraites du corps de la requête
 
-// }
+  try {
+    const book = await Book.findById(id); // Recherche du livre correspondant à l'ID fourni
+
+    if (!book) {
+      return res.status(404).json({ error: "Livre non trouvé" }); // Si le livre n'est pas trouvé, renvoie une erreur 404
+    }
+
+    // Vérification si l'utilisateur a déjà noté ce livre
+    const existingRating = book.ratings.find(
+      (rating) => rating.userId === userId
+    );
+    if (existingRating) {
+      return res.status(400).json({ error: "Vous avez déjà noté ce livre" }); // Si l'utilisateur a déjà noté le livre, renvoie une erreur 400
+    }
+
+    // Ajoute la nouvelle notation au tableau "ratings"
+    book.ratings.push({ userId, grade });
+
+    // Nombre total de notations du livre
+    const totalRatings = book.ratings.length; // Utilisation de la propriété "length" pour obtenir le nombre d'éléments dans le tableau "book.ratings"
+    // Calcule la somme des notations en parcourant chaque notation du livre
+    const sumRatings = book.ratings.reduce(
+      (sum, rating) => sum + rating.grade,
+      0
+    );
+    // Calcule la note moyenne en divisant la somme des notations par le nombre total de notations
+    const averageRating = sumRatings / totalRatings;
+    // Met à jour la propriété "averageRating" du livre avec la nouvelle note moyenne
+    book.averageRating = averageRating;
+
+    // Sauvegarde les modifications dans la base de données
+    await book.save();
+
+    // Répond avec un message de succès
+    res.status(200).json({ message: "Notation ajoutée avec succès" });
+  } catch (error) {
+    // Gère les erreurs
+    res.status(500).json({ error });
+  }
+};
