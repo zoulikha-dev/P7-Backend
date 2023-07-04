@@ -2,7 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 
 const bookRoutes = require("./routes/books");
-const userRoutes = require("./routes/users");
+const userRoutes = require("./routes/auth");
 
 const path = require("path");
 
