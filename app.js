@@ -8,10 +8,10 @@ const path = require("path");
 
 //Permet d'interagir avec MongoDB à l'aide de Mongoose
 mongoose
-  .connect(
-    "mongodb+srv://Zoulikha:Assiya3110@vieux-grimoire-cluster.ogqxfyn.mongodb.net/?retryWrites=true&w=majority",
-    { useNewUrlParser: true, useUnifiedTopology: true }
-  )
+  .connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
   .then(() => console.log("Connexion à MongoDB réussie !"))
   .catch(() => console.log("Connexion à MongoDB échouée !"));
 
@@ -42,3 +42,5 @@ app.use("/api/auth", userRoutes);
 app.use("/images", express.static(path.join(__dirname, "images")));
 
 module.exports = app;
+
+// Le fichier app.js est responsable de la configuration générale de l'application Express, de la connexion à la base de données et de la gestion des routes.
