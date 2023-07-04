@@ -145,3 +145,21 @@ exports.addRating = async (req, res, next) => {
     res.status(500).json({ error });
   }
 };
+
+// Récupère les 3 livres ayant la meilleure note moyenne
+exports.getBestRatedBooks = (req, res, next) => {
+  // Utilisation de la méthode find() pour récupérer tous les documents de la collection "Book"
+  Book.find({})
+    // Utilisation de la méthode sort() pour trier les résultats en fonction de la note moyenne (averageRating)
+    .sort({ averageRating: -1 }) // Tri décroissant pour obtenir les meilleures notes en premier
+    // Utilisation de la méthode limit() pour limiter le nombre de résultats à 3
+    .limit(3)
+    .then((books) => {
+      // Renvoie une réponse JSON contenant les livres ayant la meilleure note
+      res.status(200).json(books);
+    })
+    .catch((error) => {
+      // Gère les erreurs
+      res.status(500).json({ error });
+    });
+};
