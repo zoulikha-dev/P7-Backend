@@ -1,7 +1,9 @@
 // Charger les variables d'environnement à partir du fichier .env
 require("dotenv").config();
 
+// Importer le module http pour créer un serveur HTTP
 const http = require("http");
+// Importer l'application depuis le fichier app.js
 const app = require("./app");
 
 const normalizePort = (val) => {
@@ -15,9 +17,11 @@ const normalizePort = (val) => {
   }
   return false;
 };
+// Détermine la valeur du port à partir des variables d'environnement ou utilise le port par défaut 4000
 const port = normalizePort(process.env.PORT || "4000");
 app.set("port", port);
 
+// Fonction pour gérer les erreurs lors du démarrage du serveur
 const errorHandler = (error) => {
   if (error.syscall !== "listen") {
     throw error;
@@ -39,6 +43,7 @@ const errorHandler = (error) => {
   }
 };
 
+// Crée un serveur HTTP avec l'application
 const server = http.createServer(app);
 
 server.on("error", errorHandler);
@@ -48,4 +53,8 @@ server.on("listening", () => {
   console.log("Listening on " + bind);
 });
 
+//Démarre le serveur en ecoutant le port qui est spécifié
 server.listen(port);
+
+//ce code configure et démarre un serveur HTTP qui écoute sur un port spécifié, en utilisant l'application définie dans le fichier app.js.
+//Il gère également les erreurs éventuelles qui pourraient survenir lors du démarrage du serveur.
