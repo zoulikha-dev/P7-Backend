@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-//
+// Import du plugin mongoose-unique-validator qui ajoute une validation unique aux champs spécifiés dans le schéma
 const uniqueValidator = require("mongoose-unique-validator");
 
 const userSchema = mongoose.Schema({
