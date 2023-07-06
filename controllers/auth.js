@@ -51,9 +51,10 @@ exports.login = (req, res, next) => {
           // Si les informations d'identification sont correctes, renvoie un identifiant d'utilisateur et un jeton d'authentification
           res.status(200).json({
             // Utilisation de la fonction sign afin de chiffrer un nouveau token. le token contient l'user ID encodée et la clé secrète d'encodage.
-            userId: jwt.sign({ userId: user._id }, "RANDOM_TOKEN_SECRET", {
+            token: jwt.sign({ userId: user._id }, process.env.TOKEN_SECRET, {
               expiresIn: "24h", // chaque token dure 24h
             }),
+            userId: user._id,
           });
         })
         .catch((error) => {
