@@ -7,7 +7,7 @@ module.exports = (req, res, next) => {
     const token = req.headers.authorization.split(" ")[1];
 
     // Vérification et décryptage du token à l'aide de la clé secrète
-    const decodedToken = jwt.verify(token, "RANDOM_TOKEN_SECRET");
+    const decodedToken = jwt.verify(token, process.env.TOKEN_SECRET);
 
     // Récupération de l'identifiant de l'utilisateur depuis le token décrypté
     const userId = decodedToken.userId;
