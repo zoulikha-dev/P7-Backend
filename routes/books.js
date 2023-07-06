@@ -10,10 +10,13 @@ const {
 const router = express.Router();
 
 // Route pour récupérer tous les livres
-router.get("/", auth, bookCtrl.getAllBooks);
+router.get("/", bookCtrl.getAllBooks);
+
+// Route pour récupérer les 3 livres avec la meilleure note moyenne
+router.get("/bestrating", bookCtrl.getBestRatedBooks);
 
 // Route pour récupérer un livre par son ID
-router.get("/:id", auth, bookCtrl.getOneBook);
+router.get("/:id", bookCtrl.getOneBook);
 
 // Route pour créer un nouveau livre
 router.post("/", auth, multerConfig, optimizeImage, bookCtrl.createBook);
@@ -26,8 +29,5 @@ router.delete("/:id", auth, bookCtrl.deleteBook);
 
 // Route pour ajouter une notation à un livre
 router.post("/:id/rating", auth, bookCtrl.addRating);
-
-// Route pour récupérer les 3 livres avec la meilleure note moyenne
-router.get("/bestrating", auth, bookCtrl.getBestRatedBooks);
 
 module.exports = router;
