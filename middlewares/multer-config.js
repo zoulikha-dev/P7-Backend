@@ -2,6 +2,8 @@
 const multer = require("multer");
 //configuration Sharp pour gérer l'optimisation de l'image
 const sharp = require("sharp");
+//
+const fs = require("fs");
 
 // Définition des types MIME pour les extensions d'images acceptées
 const MIME_TYPES = {
@@ -39,10 +41,13 @@ const optimizeImage = async (req, res, next) => {
   try {
     const { path } = req.file; // Chemin du fichier téléchargé
     // Remplacer l'extension du fichier par "_optimized.jpg" pour le chemin de l'image optimisée (format JPEG)
-    const optimizedImagePath = path.replace(/\.\w+$/, "_optimized.jpg");
+    const optimizedImagePath = path.replace(/\.\w+$/, "_optimized.webp");
 
     // Utilisation de Sharp pour optimiser l'image en la convertissant en format JPEG avec une qualité de 80%
-    await sharp(path).jpeg({ quality: 80 }).toFile(optimizedImagePath);
+    await sharp(path)
+      .webp({ quality: 80 })
+      .resize(400)
+      .toFile(optimizedImagePath);
 
     req.file.path = optimizedImagePath; // Mettre à jour le chemin du fichier avec l'image optimisée
 
@@ -57,6 +62,8 @@ const optimizeImage = async (req, res, next) => {
         }
       });
     }
+
+    console.log("Image optimisée :", req.file); // Console.log ajouté ici pour le débogage
   } catch (err) {
     console.error("Erreur lors de l'optimisation de l'image :", err);
   }
@@ -87,6 +94,8 @@ const deleteOldImage = async (req, res, next) => {
           }
         });
       }
+
+      console.log("Ancienne image supprimée."); // Console.log ajouté ici pour le débogage
     } catch (err) {
       console.error("Erreur lors de la recherche du livre :", err);
     }
