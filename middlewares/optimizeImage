@@ -1,0 +1,35 @@
+const sharp = require("sharp");
+const fs = require("fs");
+
+const optimizeImage = async (req, res, next) => {
+  try {
+    if (!req.file) {
+      // Si aucune nouvelle image n'est téléchargée, passez simplement au middleware suivant
+      return next();
+    }
+
+    const imagePath = req.file.path;
+
+    // Optimisation de l'image et conversion en WebP avec Sharp
+    await sharp(imagePath)
+      .resize(400)
+      .webp({ quality: 80 })
+      .toFile(`${imagePath}.webp`);
+
+    // Suppression de l'ancienne image si elle existe
+    if (req.body.oldImage) {
+      fs.unlinkSync(req.body.oldImage);
+    }
+
+    // Mettre à jour le chemin de la nouvelle image dans req.body ou dans votre modèle de données
+    req.body.image = `${imagePath}.webp`;
+
+    // Passez au middleware suivant
+    next();
+  } catch (error) {
+    // Gérer les erreurs liées à Sharp ici
+    next(error);
+  }
+};
+
+module.exports = optimizeImage;
