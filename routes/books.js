@@ -1,11 +1,7 @@
 const express = require("express");
 const bookCtrl = require("../controllers/book");
 const auth = require("../middlewares/auth");
-const {
-  multerConfig,
-  deleteOldImage,
-  optimizeImage,
-} = require("../middlewares/multer-config");
+const { multerConfig, optimizeImage } = require("../middlewares/multer-config");
 
 const router = express.Router();
 
@@ -22,7 +18,7 @@ router.get("/:id", bookCtrl.getOneBook);
 router.post("/", auth, multerConfig, optimizeImage, bookCtrl.createBook);
 
 // Route pour mettre à jour un livre existant
-router.put("/:id", auth, multerConfig, deleteOldImage, bookCtrl.modifyBook);
+router.put("/:id", auth, multerConfig, optimizeImage, bookCtrl.modifyBook);
 
 // Route pour supprimer un livre
 router.delete("/:id", auth, bookCtrl.deleteBook);
