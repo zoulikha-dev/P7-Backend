@@ -22,14 +22,16 @@ exports.createBook = (req, res, next) => {
   // Suppression des propriétés inutiles du livre
   delete bookObject._id;
   delete bookObject._userId;
+
+  const imageUrl = req.body.imageUrl; // Récupère le chemin de l'image optimisée
+
   // Création d'une nouvelle instance de Book avec les données du livre
   const book = new Book({
     ...bookObject,
     userId: req.auth.userId,
-    imageUrl: `${req.protocol}://${req.get("host")}/images/${
-      req.file.filename
-    }`,
+    imageUrl: imageUrl, // Mettre à jour avec le chemin de l'image optimisée
   });
+
   book
     .save() // Enregistre le livre dans la base de données
     .then(() => res.status(201).json({ message: "Livre enregistré !" })) // Répond avec un message de succès
@@ -45,7 +47,7 @@ exports.modifyBook = (req, res, next) => {
         ...JSON.parse(req.body.book),
         imageUrl: `${req.protocol}://${req.get("host")}/images/${
           req.file.filename
-        }`,
+        }.webp`, // Mettre à jour le champ imageUrl avec le nouveau chemin de l'image optimisée au format WebP
       }
     : //s'il n'existe pas, on traite simplement l'objet entrant.
       { ...req.body };
@@ -62,9 +64,14 @@ exports.modifyBook = (req, res, next) => {
         // Fournit les nouvelles données du livre en utilisant l'objet bookObject et l'identifiant du livre
         Book.updateOne(
           { _id: req.params.id },
-          { ...bookObject, _id: req.params.id }
+          { ...bookObject, _id: req.params.id, imageUrl: bookObject.imageUrl }
         )
-          .then(() => res.status(200).json({ message: "Livre modifié !" })) // Répond avec un message de succès
+          .then(() => {
+            const updatedBook = { ...bookObject, _id: req.params.id };
+            res
+              .status(200)
+              .json({ message: "Livre modifié !", book: updatedBook });
+          })
           .catch((error) => res.status(400).json({ error })); // Gère les erreurs
       }
     })
@@ -100,10 +107,9 @@ exports.deleteBook = (req, res, next) => {
     });
 };
 
-//ajout notation
 exports.addRating = async (req, res, next) => {
   const { id } = req.params; // ID du livre extrait des paramètres de la requête
-  const { userId, grade } = req.body; // Données de la notation extraites du corps de la requête
+  const { userId, rating } = req.body; // Données de la notation extraites du corps de la requête
 
   try {
     const book = await Book.findById(id); // Recherche du livre correspondant à l'ID fourni
@@ -121,25 +127,21 @@ exports.addRating = async (req, res, next) => {
     }
 
     // Ajoute la nouvelle notation au tableau "ratings"
-    book.ratings.push({ userId, grade });
+    book.ratings.push({ userId, grade: rating });
 
-    // Nombre total de notations du livre
-    const totalRatings = book.ratings.length; // Utilisation de la propriété "length" pour obtenir le nombre d'éléments dans le tableau "book.ratings"
-    // Calcule la somme des notations en parcourant chaque notation du livre
+    // Met à jour la propriété "averageRating" du livre en recalculant la note moyenne
+    const totalRatings = book.ratings.length;
     const sumRatings = book.ratings.reduce(
       (sum, rating) => sum + rating.grade,
       0
     );
-    // Calcule la note moyenne en divisant la somme des notations par le nombre total de notations
-    const averageRating = sumRatings / totalRatings;
-    // Met à jour la propriété "averageRating" du livre avec la nouvelle note moyenne
-    book.averageRating = averageRating;
+    book.averageRating = sumRatings / totalRatings;
 
     // Sauvegarde les modifications dans la base de données
     await book.save();
 
-    // Répond avec un message de succès
-    res.status(200).json({ message: "Notation ajoutée avec succès" });
+    // Répond avec un message de succès et le livre mis à jour
+    res.status(200).json({ message: "Notation ajoutée avec succès", book });
   } catch (error) {
     // Gère les erreurs
     res.status(500).json({ error });
