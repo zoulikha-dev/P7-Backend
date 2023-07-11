@@ -2,8 +2,10 @@
 const multer = require("multer");
 //configuration Sharp pour gérer l'optimisation de l'image
 const sharp = require("sharp");
-//
+// Importe le module 'fs' pour effectuer des opérations de lecture, écriture et suppression de fichiers
 const fs = require("fs");
+
+const Book = require("../models/Book");
 
 // Définition des types MIME pour les extensions d'images acceptées
 const MIME_TYPES = {
@@ -28,80 +30,42 @@ const storage = multer.diskStorage({
 });
 
 // Middleware Multer pour traiter les fichiers uniques avec le stockage défini
-const multerConfig = (module.exports = multer({ storage: storage }).single(
-  "image"
-));
+const multerConfig = multer({ storage: storage }).single("image");
 
 // Middleware pour l'optimisation de l'image
 const optimizeImage = async (req, res, next) => {
-  if (!req.file) {
-    return next(); // Si aucun fichier n'est présent, passer au middleware suivant
-  }
-
   try {
-    const { path } = req.file; // Chemin du fichier téléchargé
-    // Remplacer l'extension du fichier par "_optimized.jpg" pour le chemin de l'image optimisée (format JPEG)
-    const optimizedImagePath = path.replace(/\.\w+$/, "_optimized.webp");
+    if (!req.file) {
+      // Si aucun fichier n'est présent, passer au middleware suivant
+      return next();
+    }
 
-    // Utilisation de Sharp pour optimiser l'image en la convertissant en format JPEG avec une qualité de 80%
-    await sharp(path)
-      .webp({ quality: 80 })
+    const imagePath = req.file.path; // Chemin de l'image d'origine
+
+    const optimizedImagePath = imagePath + ".webp"; // Chemin de la nouvelle image optimisée
+
+    // Optimisation de l'image et conversion en WebP avec Sharp
+    await sharp(imagePath)
       .resize(400)
-      .toFile(optimizedImagePath);
+      .webp({ quality: 80 })
+      .toFile(imagePath + ".webp");
 
-    req.file.path = optimizedImagePath; // Mettre à jour le chemin du fichier avec l'image optimisée
+    //Suppression de l'ancienne image JPEG
+    fs.unlinkSync(imagePath);
 
-    if (optimizedImagePath !== path) {
-      // Si le chemin de l'image optimisée est différent du chemin d'origine, supprimer l'ancienne image
-      fs.unlink(path, (err) => {
-        if (err) {
-          console.error(
-            "Erreur lors de la suppression de l'image d'origine :",
-            err
-          );
-        }
-      });
-    }
+    req.body.imageUrl = `${req.protocol}://${req.get(
+      "host"
+    )}/${optimizedImagePath}`;
+    // Met à jour l'URL de l'image dans le corps de la requête avec le protocole, l'hôte et le chemin de la nouvelle image optimisée
 
-    console.log("Image optimisée :", req.file); // Console.log ajouté ici pour le débogage
-  } catch (err) {
-    console.error("Erreur lors de l'optimisation de l'image :", err);
+    // console.log("Nouvelle image optimisée :", req.body.image);
+    // console.log("Image optimisée avec succès !"); // Ajout du message de succès
+
+    next();
+  } catch (error) {
+    // console.log("Erreur lors de l'optimisation de l'image :", error);
+    next(error);
   }
-
-  next(); // Passe au middleware suivant
 };
 
-// Middleware pour supprimer l'ancienne image lors de la mise à jour
-const deleteOldImage = async (req, res, next) => {
-  if (req.file) {
-    // Si une nouvelle image a été téléchargée
-    const bookId = req.params.id; // Identifiant du livre à mettre à jour
-
-    try {
-      const book = await Book.findById(bookId); // Récupère le livre à mettre à jour
-
-      if (book && book.imageUrl) {
-        // Si le livre existe et a une ancienne image
-        const oldImagePath = book.imageUrl; // Récupère le chemin de l'ancienne image
-
-        // Supprime l'ancienne image
-        fs.unlink(oldImagePath, (err) => {
-          if (err) {
-            console.error(
-              "Erreur lors de la suppression de l'ancienne image :",
-              err
-            );
-          }
-        });
-      }
-
-      console.log("Ancienne image supprimée."); // Console.log ajouté ici pour le débogage
-    } catch (err) {
-      console.error("Erreur lors de la recherche du livre :", err);
-    }
-  }
-
-  next(); // Passe au middleware suivant
-};
-
-module.exports = { multerConfig, optimizeImage, deleteOldImage };
+module.exports = { multerConfig, optimizeImage };
